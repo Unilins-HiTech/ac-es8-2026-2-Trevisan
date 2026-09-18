@@ -4,12 +4,19 @@ const pokemonGrid = document.getElementById('pokemonGrid');
 const loading = document.getElementById('loading');
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
 
 const pokemonModalElement = document.getElementById('pokemonModal');
 const pokemonModal = new bootstrap.Modal(pokemonModalElement);
 
 const pokemonModalTitle = document.getElementById('pokemonModalLabel');
 const pokemonModalBody = document.getElementById('pokemonModalBody');
+
+
+// Controle do carregamento
+let pokemonOffset = 0;
+
+const pokemonLimit = 20;
 
 
 // Busca os dados de um Pokémon
@@ -32,15 +39,44 @@ async function fetchPokemonData(urlOrName) {
 
 
 // Carrega os primeiros Pokémon
-async function loadInitialPokemon(limit = 20) {
+async function loadInitialPokemon() {
 
 	showLoading(true);
 
 	pokemonGrid.innerHTML = '';
 
+	pokemonOffset = 0;
+
 	try {
 
-		const response = await fetch(`${API_URL}?limit=${limit}`);
+		await loadMorePokemon();
+
+	} catch (error) {
+
+		showError(
+			'Não foi possível carregar os Pokémon. Tente novamente.'
+		);
+
+	} finally {
+
+		showLoading(false);
+
+	}
+}
+
+
+// Carrega mais Pokémon
+async function loadMorePokemon() {
+
+	loadMoreBtn.disabled = true;
+
+	loadMoreBtn.textContent = 'Carregando...';
+
+	try {
+
+		const response = await fetch(
+			`${API_URL}?limit=${pokemonLimit}&offset=${pokemonOffset}`
+		);
 
 		if (!response.ok) {
 			throw new Error('Erro ao buscar Pokémon');
@@ -56,15 +92,23 @@ async function loadInitialPokemon(limit = 20) {
 
 		pokemonList.forEach(renderPokemonCard);
 
+		pokemonOffset += pokemonLimit;
+
 	} catch (error) {
 
-		showError('Não foi possível carregar os Pokémon. Tente novamente.');
+		showError(
+			'Não foi possível carregar mais Pokémon.'
+		);
 
 	} finally {
 
-		showLoading(false);
+		loadMoreBtn.disabled = false;
+
+		loadMoreBtn.textContent =
+			'Carregar mais Pokémon';
 
 	}
+
 }
 
 
@@ -75,6 +119,7 @@ function renderPokemonCard(pokemon) {
 		pokemon.sprites.other['official-artwork'].front_default ||
 		pokemon.sprites.front_default;
 
+
 	const typesBadges = pokemon.types
 		.map(
 			(t) =>
@@ -84,8 +129,14 @@ function renderPokemonCard(pokemon) {
 		)
 		.join('');
 
-	const heightInMeters = (pokemon.height / 10).toFixed(1);
-	const weightInKg = (pokemon.weight / 10).toFixed(1);
+
+	const heightInMeters =
+		(pokemon.height / 10).toFixed(1);
+
+
+	const weightInKg =
+		(pokemon.weight / 10).toFixed(1);
+
 
 	const cardHTML = `
 		<div class="col">
@@ -98,7 +149,9 @@ function renderPokemonCard(pokemon) {
 				aria-label="Ver detalhes de ${pokemon.name}"
 			>
 
-				<div class="text-center p-3 bg-white rounded-top">
+				<div
+					class="text-center p-3 bg-white rounded-top"
+				>
 
 					<img
 						src="${imageUrl}"
@@ -109,11 +162,16 @@ function renderPokemonCard(pokemon) {
 
 				</div>
 
+
 				<div class="card-body">
 
-					<div class="d-flex justify-content-between align-items-center mb-2">
+					<div
+						class="d-flex justify-content-between align-items-center mb-2"
+					>
 
-						<h5 class="card-title text-capitalize fw-bold m-0">
+						<h5
+							class="card-title text-capitalize fw-bold m-0"
+						>
 							${pokemon.name}
 						</h5>
 
@@ -123,9 +181,11 @@ function renderPokemonCard(pokemon) {
 
 					</div>
 
+
 					<div class="mb-3">
 						${typesBadges}
 					</div>
+
 
 					<div class="row text-center border-top pt-2">
 
@@ -140,6 +200,7 @@ function renderPokemonCard(pokemon) {
 							</strong>
 
 						</div>
+
 
 						<div class="col-6">
 
@@ -162,14 +223,20 @@ function renderPokemonCard(pokemon) {
 		</div>
 	`;
 
-	pokemonGrid.insertAdjacentHTML('beforeend', cardHTML);
+
+	pokemonGrid.insertAdjacentHTML(
+		'beforeend',
+		cardHTML
+	);
 }
 
 
 // Abre o modal com os detalhes
 async function openPokemonModal(id) {
 
-	pokemonModalTitle.textContent = 'Carregando...';
+	pokemonModalTitle.textContent =
+		'Carregando...';
+
 
 	pokemonModalBody.innerHTML = `
 		<div class="text-center py-5">
@@ -178,10 +245,13 @@ async function openPokemonModal(id) {
 				class="spinner-border text-danger"
 				role="status"
 			>
+
 				<span class="visually-hidden">
 					Carregando...
 				</span>
+
 			</div>
+
 
 			<p class="mt-3 text-secondary">
 				Buscando informações do Pokémon...
@@ -190,6 +260,7 @@ async function openPokemonModal(id) {
 		</div>
 	`;
 
+
 	pokemonModal.show();
 
 
@@ -197,8 +268,11 @@ async function openPokemonModal(id) {
 
 		const pokemon = await fetchPokemonData(id);
 
+
+		// Título
 		pokemonModalTitle.textContent =
 			`${pokemon.name} #${String(pokemon.id).padStart(3, '0')}`;
+
 
 		// Habilidades
 		const abilities = pokemon.abilities
@@ -214,15 +288,22 @@ async function openPokemonModal(id) {
 		// Áudio
 		let audioHTML = '';
 
-		if (pokemon.cries && pokemon.cries.latest) {
+
+		if (
+			pokemon.cries &&
+			pokemon.cries.latest
+		) {
 
 			audioHTML = `
 				<audio
 					controls
 					class="w-100"
 				>
+
 					<source src="${pokemon.cries.latest}">
+
 					Seu navegador não suporta áudio.
+
 				</audio>
 			`;
 
@@ -245,6 +326,7 @@ async function openPokemonModal(id) {
 			'speed'
 		];
 
+
 		const stats = pokemon.stats
 			.filter((stat) =>
 				wantedStats.includes(stat.stat.name)
@@ -256,10 +338,13 @@ async function openPokemonModal(id) {
 					100
 				);
 
+
 				return `
 					<div class="mb-3">
 
-						<div class="d-flex justify-content-between">
+						<div
+							class="d-flex justify-content-between"
+						>
 
 							<span class="stat-name fw-bold">
 								${stat.stat.name}
@@ -270,6 +355,7 @@ async function openPokemonModal(id) {
 							</span>
 
 						</div>
+
 
 						<div
 							class="progress"
@@ -296,22 +382,27 @@ async function openPokemonModal(id) {
 
 		// Sprites
 		const sprites = [
+
 			{
 				nome: 'Normal - Frente',
 				url: pokemon.sprites.front_default
 			},
+
 			{
 				nome: 'Normal - Costas',
 				url: pokemon.sprites.back_default
 			},
+
 			{
 				nome: 'Shiny - Frente',
 				url: pokemon.sprites.front_shiny
 			},
+
 			{
 				nome: 'Shiny - Costas',
 				url: pokemon.sprites.back_shiny
 			}
+
 		];
 
 
@@ -327,10 +418,13 @@ async function openPokemonModal(id) {
 								class="border rounded p-2 d-flex align-items-center justify-content-center"
 								style="width: 120px; height: 120px;"
 							>
+
 								<small class="text-muted">
 									Indisponível
 								</small>
+
 							</div>
+
 
 							<small class="d-block mt-2">
 								${sprite.nome}
@@ -341,6 +435,7 @@ async function openPokemonModal(id) {
 
 				}
 
+
 				return `
 					<div class="text-center">
 
@@ -349,6 +444,7 @@ async function openPokemonModal(id) {
 							alt="${sprite.nome} de ${pokemon.name}"
 							class="sprite-img border rounded p-2 bg-light"
 						>
+
 
 						<small class="d-block mt-2">
 							${sprite.nome}
@@ -361,12 +457,13 @@ async function openPokemonModal(id) {
 			.join('');
 
 
-		// Conteúdo final do modal
+		// Conteúdo do modal
 		pokemonModalBody.innerHTML = `
 
 			<div class="row">
 
-				<!-- Informações -->
+
+				<!-- Informações do Pokémon -->
 				<div class="col-md-5 text-center mb-4">
 
 					<img
@@ -380,7 +477,9 @@ async function openPokemonModal(id) {
 						style="max-height: 250px;"
 					>
 
+
 					<div class="mt-3">
+
 						${pokemon.types
 							.map(
 								(t) =>
@@ -389,6 +488,7 @@ async function openPokemonModal(id) {
 									</span>`
 							)
 							.join('')}
+
 					</div>
 
 				</div>
@@ -444,7 +544,10 @@ async function openPokemonModal(id) {
 					Sprites
 				</h5>
 
-				<div class="d-flex flex-wrap justify-content-center gap-3">
+
+				<div
+					class="d-flex flex-wrap justify-content-center gap-3"
+				>
 
 					${spritesHTML}
 
@@ -454,12 +557,17 @@ async function openPokemonModal(id) {
 
 		`;
 
+
 	} catch (error) {
 
-		pokemonModalTitle.textContent = 'Erro';
+		pokemonModalTitle.textContent =
+			'Erro';
+
 
 		pokemonModalBody.innerHTML = `
-			<div class="alert alert-warning text-center">
+			<div
+				class="alert alert-warning text-center"
+			>
 
 				<h5>
 					Não foi possível carregar os dados.
@@ -477,36 +585,47 @@ async function openPokemonModal(id) {
 }
 
 
-// Evento de clique nos cards
+// Clique nos cards
 pokemonGrid.addEventListener('click', (event) => {
 
-	const card = event.target.closest('.pokemon-card');
+	const card =
+		event.target.closest('.pokemon-card');
+
 
 	if (!card) {
 		return;
 	}
 
-	const pokemonId = card.dataset.pokemonId;
+
+	const pokemonId =
+		card.dataset.pokemonId;
+
 
 	openPokemonModal(pokemonId);
 
 });
 
 
-// Permite abrir o card usando Enter
+// Abrir card utilizando Enter
 pokemonGrid.addEventListener('keydown', (event) => {
 
 	if (event.key !== 'Enter') {
 		return;
 	}
 
-	const card = event.target.closest('.pokemon-card');
+
+	const card =
+		event.target.closest('.pokemon-card');
+
 
 	if (!card) {
 		return;
 	}
 
-	const pokemonId = card.dataset.pokemonId;
+
+	const pokemonId =
+		card.dataset.pokemonId;
+
 
 	openPokemonModal(pokemonId);
 
@@ -516,7 +635,9 @@ pokemonGrid.addEventListener('keydown', (event) => {
 // Pesquisa por nome ou ID
 async function handleSearch() {
 
-	const query = searchInput.value.trim();
+	const query =
+		searchInput.value.trim();
+
 
 	if (!query) {
 
@@ -525,15 +646,20 @@ async function handleSearch() {
 		return;
 	}
 
+
 	showLoading(true);
 
 	pokemonGrid.innerHTML = '';
 
+
 	try {
 
-		const pokemon = await fetchPokemonData(query);
+		const pokemon =
+			await fetchPokemonData(query);
+
 
 		renderPokemonCard(pokemon);
+
 
 	} catch (error) {
 
@@ -550,7 +676,7 @@ async function handleSearch() {
 }
 
 
-// Mostra/esconde spinner principal
+// Mostra ou esconde o spinner principal
 function showLoading(state) {
 
 	if (state) {
@@ -576,7 +702,9 @@ function showError(message) {
 				class="alert alert-warning text-center"
 				role="alert"
 			>
+
 				${message}
+
 			</div>
 
 		</div>
@@ -586,15 +714,29 @@ function showError(message) {
 
 
 // Eventos da busca
-searchBtn.addEventListener('click', handleSearch);
+searchBtn.addEventListener(
+	'click',
+	handleSearch
+);
 
-searchInput.addEventListener('keypress', (event) => {
 
-	if (event.key === 'Enter') {
-		handleSearch();
+searchInput.addEventListener(
+	'keypress',
+	(event) => {
+
+		if (event.key === 'Enter') {
+			handleSearch();
+		}
+
 	}
+);
 
-});
+
+// Evento do botão "Carregar mais"
+loadMoreBtn.addEventListener(
+	'click',
+	loadMorePokemon
+);
 
 
 // Inicialização
