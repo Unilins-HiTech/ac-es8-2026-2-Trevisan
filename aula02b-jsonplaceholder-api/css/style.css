@@ -10,3 +10,11 @@ body {
 .card-usuario:hover {
   transform: translateY(-3px);
 }
+
+.item-post {
+  cursor: pointer;
+}
+
+.item-post:hover {
+  background-color: #f1f3f5;
+}

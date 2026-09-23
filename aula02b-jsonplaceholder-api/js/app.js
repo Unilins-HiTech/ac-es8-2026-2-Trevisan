@@ -14,6 +14,16 @@ const botaoVoltar = document.getElementById('btn-voltar');
 // Guarda os usuários já carregados para o filtro não precisar de nova requisição
 let usuariosCarregados = [];
 
+// Gera o HTML de um spinner do Bootstrap com uma mensagem ao lado
+function criarSpinner(texto) {
+	return `
+      <div class="d-flex align-items-center gap-2 text-muted">
+        <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+        <span>${texto}</span>
+      </div>
+    `;
+}
+
 // Busca a lista de usuários na API
 async function carregarUsuarios() {
 	try {
@@ -27,11 +37,12 @@ async function carregarUsuarios() {
 		renderizarListaUsuarios(usuariosCarregados);
 	} catch (erro) {
 		console.error('Erro ao carregar usuários:', erro);
-		mensagemCarregando.textContent = 'Não foi possível carregar os usuários.';
+		mensagemCarregando.innerHTML =
+			'<p class="text-danger mb-0">Não foi possível carregar os usuários.</p>';
 		return;
 	}
 
-	mensagemCarregando.style.display = 'none';
+	mensagemCarregando.classList.add('d-none');
 }
 
 // Desenha um "card" para cada usuário na tela de lista
@@ -95,7 +106,7 @@ campoBusca.addEventListener('input', () => {
 async function abrirDetalheUsuario(usuario) {
 	detalheNome.textContent = `Posts de ${usuario.name}`;
 	contadorPosts.textContent = '';
-	listaPosts.innerHTML = '<li class="list-group-item">Carregando posts...</li>';
+	listaPosts.innerHTML = `<li class="list-group-item">${criarSpinner('Carregando posts...')}</li>`;
 
 	telaLista.classList.add('d-none');
 	areaBusca.classList.add('d-none');
@@ -134,10 +145,82 @@ function renderizarPosts(posts) {
 
 	posts.forEach((post) => {
 		const item = document.createElement('li');
-		item.className = 'list-group-item';
-		item.innerHTML = `<strong>${post.title}</strong><p class="mb-0">${post.body}</p>`;
+		item.className = 'list-group-item item-post';
+		item.innerHTML = `
+      <strong>${post.title}</strong>
+      <p class="mb-1">${post.body}</p>
+      <small class="text-primary rotulo-comentarios">Ver comentários</small>
+      <div class="comentarios mt-3 d-none"></div>
+    `;
+
+		item.addEventListener('click', (evento) => {
+			// Cliques dentro da área de comentários não fecham a lista
+			if (evento.target.closest('.comentarios')) {
+				return;
+			}
+			alternarComentarios(post, item);
+		});
+
 		listaPosts.appendChild(item);
 	});
+}
+
+// Abre/fecha os comentários de um post, buscando-os na API apenas na primeira vez
+async function alternarComentarios(post, item) {
+	const areaComentarios = item.querySelector('.comentarios');
+	const rotulo = item.querySelector('.rotulo-comentarios');
+
+	if (!areaComentarios.classList.contains('d-none')) {
+		areaComentarios.classList.add('d-none');
+		rotulo.textContent = 'Ver comentários';
+		return;
+	}
+
+	areaComentarios.classList.remove('d-none');
+	rotulo.textContent = 'Ocultar comentários';
+
+	if (areaComentarios.dataset.carregado === 'true') {
+		return;
+	}
+
+	areaComentarios.innerHTML = criarSpinner('Carregando comentários...');
+
+	try {
+		// Terceira requisição, feita a partir do ID do post selecionado
+		const resposta = await fetch(`${URL_BASE}/comments?postId=${post.id}`);
+
+		if (!resposta.ok) {
+			throw new Error(`Erro HTTP: ${resposta.status}`);
+		}
+
+		const comentarios = await resposta.json();
+		renderizarComentarios(comentarios, areaComentarios);
+		areaComentarios.dataset.carregado = 'true';
+	} catch (erro) {
+		console.error('Erro ao carregar comentários:', erro);
+		areaComentarios.innerHTML =
+			'<p class="text-danger small mb-0">Erro ao carregar comentários.</p>';
+	}
+}
+
+function renderizarComentarios(comentarios, areaComentarios) {
+	if (comentarios.length === 0) {
+		areaComentarios.innerHTML =
+			'<p class="text-muted small mb-0">Este post ainda não tem comentários.</p>';
+		return;
+	}
+
+	areaComentarios.innerHTML = comentarios
+		.map(
+			(comentario) => `
+      <div class="border-start border-3 ps-3 mb-2">
+        <p class="mb-0 small"><strong>${comentario.name}</strong></p>
+        <p class="mb-0 small text-muted">${comentario.email}</p>
+        <p class="mb-0 small">${comentario.body}</p>
+      </div>
+    `
+		)
+		.join('');
 }
 
 // Botão para voltar da tela de detalhe para a tela de lista
