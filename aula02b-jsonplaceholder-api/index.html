@@ -18,13 +18,25 @@
 
     <p id="carregando" class="text-muted">Carregando usuários...</p>
 
+    <!-- Campo de busca: filtra os usuários já carregados, sem nova requisição -->
+    <div id="area-busca" class="mb-4">
+      <input
+        type="search"
+        id="campo-busca"
+        class="form-control"
+        placeholder="Buscar usuário por nome..."
+        aria-label="Buscar usuário por nome"
+      >
+    </div>
+
     <!-- Tela 1: lista de usuários -->
     <div id="tela-lista" class="row g-3"></div>
 
     <!-- Tela 2: detalhe de um usuário (começa escondida) -->
     <div id="tela-detalhe" class="d-none">
       <button id="btn-voltar" class="btn btn-outline-secondary mb-3">← Voltar</button>
-      <h2 id="detalhe-nome" class="h4 mb-3"></h2>
+      <h2 id="detalhe-nome" class="h4 mb-1"></h2>
+      <p id="contador-posts" class="text-muted mb-3"></p>
       <ul id="lista-posts" class="list-group"></ul>
     </div>
   </div>
