@@ -133,3 +133,17 @@ Ao clicar em qualquer card de Pokémon, a aplicação deve abrir um **Modal do B
 ![Demonstração da Tela Inicial - Pokédex](./img/tela-inicial.png)
 
 ![Demonstração da Tela Modal - Pokédex](./img/tela-modal.png)
+---
+
+## ✨ Melhorias Implementadas
+
+- **Busca parcial com sugestões**: digitar "char" encontra todos os Pokémon com esse trecho no nome; o campo sugere nomes enquanto você digita (<datalist>).
+- **Cache de requisições**: Pokémon já carregados não são buscados de novo na API (o modal abre na hora).
+- **Tipos coloridos e traduzidos** (Fogo, Água, Planta...) e os **6 status base** em português.
+- **Navegação no modal**: botões Anterior / Próximo e setas do teclado (← →).
+- **Filtros por tipo e geração** (`/type/{nome}` e `/generation/{id}`), que podem ser combinados (ex: Fogo + Kanto).
+- **Linha evolutiva no modal** (`/pokemon-species` → `/evolution-chain`), com as evoluções clicáveis e suporte a evoluções ramificadas (ex: Eevee).
+- **Pokémon aleatório**: botão 🎲 que abre um Pokémon sorteado (respeita os filtros ativos).
+- **Jogo "Quem é esse Pokémon?"**: mostra a silhueta de um Pokémon (`filter: brightness(0)`) para o usuário adivinhar, com placar.
+- **Modo escuro**: botão no topo, com a preferência salva no navegador.
+- **Correções**: o botão "Carregar mais" some durante a busca, e as mensagens de erro não interpretam HTML digitado pelo usuário.

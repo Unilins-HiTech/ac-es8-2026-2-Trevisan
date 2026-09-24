@@ -5,7 +5,28 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-	<title>Pokédex Simplificada T</title>
+	<title>Pokédex</title>
+
+	<link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+
+	<!-- Aplica o tema salvo antes de desenhar a página (evita "piscar") -->
+	<script>
+		(function () {
+			let theme = null;
+
+			try {
+				theme = localStorage.getItem('theme');
+			} catch (error) {}
+
+			if (!theme) {
+				theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+					? 'dark'
+					: 'light';
+			}
+
+			document.documentElement.setAttribute('data-bs-theme', theme);
+		})();
+	</script>
 
 	<!-- Bootstrap 5 CSS -->
 	<link
@@ -24,8 +45,8 @@
 		}
 
 		.badge-type {
-			text-transform: capitalize;
 			margin-right: 4px;
+			color: #fff;
 		}
 
 		.sprite-img {
@@ -34,31 +55,96 @@
 			object-fit: contain;
 		}
 
-		.stat-name {
-			text-transform: capitalize;
+		.theme-toggle {
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+
+		/* Cores dos tipos */
+		.type-normal { background-color: #a8a77a; }
+		.type-fire { background-color: #ee8130; }
+		.type-water { background-color: #6390f0; }
+		.type-electric { background-color: #f7d02c; color: #212529; }
+		.type-grass { background-color: #7ac74c; }
+		.type-ice { background-color: #96d9d6; color: #212529; }
+		.type-fighting { background-color: #c22e28; }
+		.type-poison { background-color: #a33ea1; }
+		.type-ground { background-color: #e2bf65; color: #212529; }
+		.type-flying { background-color: #a98ff3; }
+		.type-psychic { background-color: #f95587; }
+		.type-bug { background-color: #a6b91a; }
+		.type-rock { background-color: #b6a136; }
+		.type-ghost { background-color: #735797; }
+		.type-dragon { background-color: #6f35fc; }
+		.type-dark { background-color: #705746; }
+		.type-steel { background-color: #b7b7ce; color: #212529; }
+		.type-fairy { background-color: #d685ad; }
+		.type-stellar { background-color: #40b5a5; }
+		.type-unknown { background-color: #6c757d; }
+
+		/* Linha evolutiva */
+		.evolution-item {
+			width: 110px;
+		}
+
+		.evolution-item img {
+			width: 80px;
+			height: 80px;
+			object-fit: contain;
+		}
+
+		.evolution-arrow {
+			font-size: 1.5rem;
+		}
+
+		/* Quem é esse Pokémon? */
+		.guess-stage {
+			background: radial-gradient(circle, #ffffff 0%, #dee2e6 100%);
+			border-radius: 1rem;
+			min-height: 260px;
+		}
+
+		.guess-image {
+			max-height: 240px;
+			filter: brightness(0);
+			transition: filter 0.6s ease-in-out;
+		}
+
+		.guess-image.revealed {
+			filter: none;
 		}
 	</style>
 </head>
 
-<body class="bg-light">
+<body class="bg-body-tertiary">
 
 	<div class="container py-5">
 
-		<header class="text-center mb-5">
+		<header class="text-center mb-5 position-relative">
+
+			<button
+				type="button"
+				id="themeToggle"
+				class="btn btn-outline-secondary btn-sm theme-toggle"
+				aria-label="Alternar tema claro/escuro"
+			>
+				🌙
+			</button>
 
 			<h1 class="display-4 fw-bold text-danger">
 				Pokédex
 			</h1>
 
 			<p class="lead text-secondary">
-				Carregando dados da PokéAPI utilizando fetch
+				Explore os Pokémon e clique em um card para ver os detalhes
 			</p>
 
 		</header>
 
 
 		<!-- Área de Busca -->
-		<div class="row justify-content-center mb-4">
+		<div class="row justify-content-center mb-3">
 
 			<div class="col-md-6">
 
@@ -68,7 +154,9 @@
 						type="text"
 						id="searchInput"
 						class="form-control"
-						placeholder="Buscar por nome (ex: pikachu, charizard)..."
+						list="pokemonNames"
+						autocomplete="off"
+						placeholder="Buscar por nome ou número (ex: charizard, 25)..."
 					/>
 
 					<button
@@ -81,9 +169,90 @@
 
 				</div>
 
+				<!-- Sugestões da busca (preenchidas pelo JavaScript) -->
+				<datalist id="pokemonNames"></datalist>
+
 			</div>
 
 		</div>
+
+
+		<!-- Filtros e ações -->
+		<div class="row justify-content-center g-2 mb-4">
+
+			<div class="col-6 col-md-3">
+
+				<select
+					id="typeFilter"
+					class="form-select"
+					aria-label="Filtrar por tipo"
+				>
+					<option value="">Todos os tipos</option>
+					<!-- Opções inseridas pelo JavaScript -->
+				</select>
+
+			</div>
+
+
+			<div class="col-6 col-md-3">
+
+				<select
+					id="generationFilter"
+					class="form-select"
+					aria-label="Filtrar por geração"
+				>
+					<option value="">Todas as gerações</option>
+					<option value="1">1ª Geração (Kanto)</option>
+					<option value="2">2ª Geração (Johto)</option>
+					<option value="3">3ª Geração (Hoenn)</option>
+					<option value="4">4ª Geração (Sinnoh)</option>
+					<option value="5">5ª Geração (Unova)</option>
+					<option value="6">6ª Geração (Kalos)</option>
+					<option value="7">7ª Geração (Alola)</option>
+					<option value="8">8ª Geração (Galar)</option>
+					<option value="9">9ª Geração (Paldea)</option>
+				</select>
+
+			</div>
+
+
+			<div class="col-6 col-md-auto">
+
+				<button
+					type="button"
+					id="randomBtn"
+					class="btn btn-outline-danger w-100"
+				>
+					🎲 Aleatório
+				</button>
+
+			</div>
+
+
+			<div class="col-6 col-md-auto">
+
+				<button
+					type="button"
+					id="guessGameBtn"
+					class="btn btn-outline-danger w-100"
+				>
+					❓ Quem é esse Pokémon?
+				</button>
+
+			</div>
+
+		</div>
+
+
+		<!-- Mensagens de erro / aviso -->
+		<div id="messageArea"></div>
+
+
+		<!-- Quantidade de resultados dos filtros -->
+		<p
+			id="resultInfo"
+			class="text-center text-body-secondary small"
+		></p>
 
 
 		<!-- Spinner principal -->
@@ -115,7 +284,10 @@
 
 
 		<!-- Botão carregar mais -->
-		<div class="text-center mt-5">
+		<div
+			id="loadMoreWrapper"
+			class="text-center mt-5"
+		>
 
 			<button
 				id="loadMoreBtn"
@@ -165,6 +337,149 @@
 					id="pokemonModalBody"
 				>
 					<!-- Conteúdo inserido pelo JavaScript -->
+				</div>
+
+				<div class="modal-footer justify-content-between">
+
+					<button
+						type="button"
+						id="prevPokemonBtn"
+						class="btn btn-outline-danger"
+						disabled
+					>
+						← Anterior
+					</button>
+
+					<button
+						type="button"
+						id="nextPokemonBtn"
+						class="btn btn-outline-danger"
+						disabled
+					>
+						Próximo →
+					</button>
+
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+
+
+	<!-- Modal do jogo "Quem é esse Pokémon?" -->
+	<div
+		class="modal fade"
+		id="guessModal"
+		tabindex="-1"
+		aria-labelledby="guessModalLabel"
+		aria-hidden="true"
+	>
+
+		<div class="modal-dialog modal-dialog-centered">
+
+			<div class="modal-content">
+
+				<div class="modal-header">
+
+					<h5
+						class="modal-title fw-bold"
+						id="guessModalLabel"
+					>
+						Quem é esse Pokémon?
+					</h5>
+
+					<button
+						type="button"
+						class="btn-close"
+						data-bs-dismiss="modal"
+						aria-label="Fechar"
+					></button>
+
+				</div>
+
+				<div class="modal-body">
+
+					<p
+						id="guessScore"
+						class="text-end small text-body-secondary mb-2"
+					>
+						Acertos: 0 de 0
+					</p>
+
+
+					<div class="guess-stage d-flex align-items-center justify-content-center p-3 mb-3">
+
+						<div
+							id="guessLoading"
+							class="spinner-border text-danger"
+							role="status"
+						>
+							<span class="visually-hidden">Carregando...</span>
+						</div>
+
+						<img
+							id="guessImage"
+							class="guess-image img-fluid d-none"
+							alt="Silhueta de um Pokémon"
+						>
+
+					</div>
+
+
+					<form
+						id="guessForm"
+						class="input-group"
+						autocomplete="off"
+					>
+
+						<input
+							type="text"
+							id="guessInput"
+							class="form-control"
+							list="pokemonNames"
+							placeholder="Digite o nome do Pokémon..."
+							aria-label="Seu palpite"
+						/>
+
+						<button
+							type="submit"
+							id="guessSubmitBtn"
+							class="btn btn-danger"
+						>
+							Chutar
+						</button>
+
+					</form>
+
+
+					<div
+						id="guessFeedback"
+						class="mt-3 text-center"
+						aria-live="polite"
+					></div>
+
+				</div>
+
+				<div class="modal-footer justify-content-between">
+
+					<button
+						type="button"
+						id="guessRevealBtn"
+						class="btn btn-outline-secondary"
+					>
+						Desistir e revelar
+					</button>
+
+					<button
+						type="button"
+						id="guessNextBtn"
+						class="btn btn-danger"
+					>
+						Próximo →
+					</button>
+
 				</div>
 
 			</div>
