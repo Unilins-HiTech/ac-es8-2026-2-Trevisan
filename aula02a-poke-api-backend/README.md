@@ -1,5 +1,7 @@
 # API da Pokédex (Node.js + Express + Supabase)
 
+🌐 **API no ar:** https://pokedex-trevisan.onrender.com · **Site:** https://pokedex-app-trevisan.onrender.com
+
 Backend da [Pokédex](../aula02a-poke-api) que salva no banco de dados (Supabase / PostgreSQL):
 
 - 🏆 **Ranking** do jogo "Quem é esse Pokémon?"
@@ -60,7 +62,7 @@ A API sobe em `http://localhost:3000`. O frontend, aberto em `localhost`, usa es
 
 | Campo | Valor |
 |---|---|
-| Name | `pokedex-api-trevisan` |
+| Name | `pokedex-trevisan` |
 | Root Directory | `aula02a-poke-api-backend` |
 | Runtime | Node |
 | Build Command | `npm install` |
@@ -73,7 +75,7 @@ A API sobe em `http://localhost:3000`. O frontend, aberto em `localhost`, usa es
 |---|---|
 | `SUPABASE_URL` | Project URL do Supabase |
 | `SUPABASE_SECRET_KEY` | Secret key do Supabase |
-| `CORS_ORIGIN` | `https://pokedex-trevisan.onrender.com` |
+| `CORS_ORIGIN` | `https://pokedex-app-trevisan.onrender.com` (URL do site) |
 
 > Se usar outro nome no Render, atualize a constante `BACKEND_URL` em [`../aula02a-poke-api/js/api.js`](../aula02a-poke-api/js/api.js).
 

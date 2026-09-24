@@ -1,7 +1,7 @@
 // URL da nossa API (backend). Rodando localmente usa o servidor da máquina.
 const BACKEND_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
 	? 'http://localhost:3000'
-	: 'https://pokedex-api-trevisan.onrender.com';
+	: 'https://pokedex-trevisan.onrender.com';
 
 
 // Aviso para o primeiro acesso: no plano gratuito do Render a API "dorme"
