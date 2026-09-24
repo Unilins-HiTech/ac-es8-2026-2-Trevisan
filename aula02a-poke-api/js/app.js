@@ -1576,6 +1576,196 @@ guessGameBtn.addEventListener('click', () => {
 
 	newGuessRound();
 
+	resetSaveScore();
+
+	loadRanking();
+
+});
+
+
+// ===== Ranking (salvo no banco pela nossa API) =====
+
+const saveScoreBtn = document.getElementById('saveScoreBtn');
+const saveScoreForm = document.getElementById('saveScoreForm');
+const playerNameInput = document.getElementById('playerNameInput');
+const saveScoreSubmitBtn = document.getElementById('saveScoreSubmitBtn');
+const saveScoreFeedback = document.getElementById('saveScoreFeedback');
+const rankingList = document.getElementById('rankingList');
+
+
+// Mostra uma mensagem na área de salvar placar
+function showSaveScoreFeedback(message, variant) {
+
+	saveScoreFeedback.className = `small mt-2 text-center text-${variant}`;
+
+	saveScoreFeedback.textContent = message;
+}
+
+
+// Volta a área de salvar placar ao estado inicial
+function resetSaveScore() {
+
+	saveScoreBtn.classList.remove('d-none');
+
+	saveScoreForm.classList.add('d-none');
+
+	saveScoreFeedback.textContent = '';
+}
+
+
+// Busca e mostra o Top 10
+async function loadRanking() {
+
+	rankingList.innerHTML = `
+		<li class="list-group-item text-body-secondary">
+			Carregando ranking... ${COLD_START_HINT}
+		</li>
+	`;
+
+
+	try {
+
+		const ranking = await backendRequest('/ranking');
+
+
+		if (ranking.length === 0) {
+
+			rankingList.innerHTML = `
+				<li class="list-group-item text-body-secondary">
+					Ninguém no ranking ainda. Seja o primeiro!
+				</li>
+			`;
+
+			return;
+		}
+
+
+		rankingList.innerHTML = ranking
+			.map((item) => {
+
+				const percentage = Math.round((item.acertos / item.total) * 100);
+
+				return `
+					<li class="list-group-item d-flex justify-content-between align-items-start">
+
+						<span class="ms-2 me-auto fw-bold">
+							${escapeHTML(item.nome)}
+						</span>
+
+						<span class="text-body-secondary">
+							${item.acertos} de ${item.total} (${percentage}%)
+						</span>
+
+					</li>
+				`;
+
+			})
+			.join('');
+
+	} catch (error) {
+
+		rankingList.innerHTML = `
+			<li class="list-group-item text-danger">
+				Não foi possível carregar o ranking.
+			</li>
+		`;
+
+	}
+}
+
+
+// Botão "Salvar meu placar"
+saveScoreBtn.addEventListener('click', () => {
+
+	if (guessScore.total === 0) {
+
+		showSaveScoreFeedback('Jogue pelo menos uma rodada antes de salvar.', 'danger');
+
+		return;
+	}
+
+
+	saveScoreBtn.classList.add('d-none');
+
+	saveScoreForm.classList.remove('d-none');
+
+	saveScoreFeedback.textContent = '';
+
+
+	// Lembra o último nome usado
+	try {
+		playerNameInput.value = localStorage.getItem('playerName') || '';
+	} catch (error) {}
+
+
+	playerNameInput.focus();
+
+});
+
+
+// Envia o placar para a API
+saveScoreForm.addEventListener('submit', async (event) => {
+
+	event.preventDefault();
+
+
+	const nome = playerNameInput.value.trim();
+
+
+	if (!nome) {
+
+		showSaveScoreFeedback('Digite seu nome.', 'danger');
+
+		return;
+	}
+
+
+	saveScoreSubmitBtn.disabled = true;
+
+	showSaveScoreFeedback(`Salvando... ${COLD_START_HINT}`, 'body-secondary');
+
+
+	try {
+
+		await backendRequest('/ranking', {
+			method: 'POST',
+			body: {
+				nome,
+				acertos: guessScore.hits,
+				total: guessScore.total
+			}
+		});
+
+
+		try {
+			localStorage.setItem('playerName', nome);
+		} catch (error) {}
+
+
+		// Começa uma nova partida
+		guessScore.hits = 0;
+
+		guessScore.total = 0;
+
+		updateGuessScore();
+
+
+		resetSaveScore();
+
+		showSaveScoreFeedback('Placar salvo! Uma nova partida começou.', 'success');
+
+		loadRanking();
+
+	} catch (error) {
+
+		showSaveScoreFeedback(error.message, 'danger');
+
+	} finally {
+
+		saveScoreSubmitBtn.disabled = false;
+
+	}
+
 });
 
 

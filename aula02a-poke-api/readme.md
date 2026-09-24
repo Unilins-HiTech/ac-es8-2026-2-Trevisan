@@ -145,5 +145,6 @@ Ao clicar em qualquer card de Pokémon, a aplicação deve abrir um **Modal do B
 - **Linha evolutiva no modal** (`/pokemon-species` → `/evolution-chain`), com as evoluções clicáveis e suporte a evoluções ramificadas (ex: Eevee).
 - **Pokémon aleatório**: botão 🎲 que abre um Pokémon sorteado (respeita os filtros ativos).
 - **Jogo "Quem é esse Pokémon?"**: mostra a silhueta de um Pokémon (`filter: brightness(0)`) para o usuário adivinhar, com placar.
+- **🏆 Ranking do jogo** e **👥 Times Pokémon** salvos em banco de dados (Supabase), através da nossa API em [`../aula02a-poke-api-backend`](../aula02a-poke-api-backend).
 - **Modo escuro**: botão no topo, com a preferência salva no navegador.
 - **Correções**: o botão "Carregar mais" some durante a busca, e as mensagens de erro não interpretam HTML digitado pelo usuário.
