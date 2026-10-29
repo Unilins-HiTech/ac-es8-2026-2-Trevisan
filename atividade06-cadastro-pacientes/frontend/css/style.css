@@ -1,0 +1,25 @@
+/* Complementa o Bootstrap: os componentes principais já vêm prontos */
+body {
+  background-color: #f8f9fa;
+}
+
+.container {
+  max-width: 1100px;
+}
+
+table {
+  background-color: #fff;
+}
+
+td {
+  vertical-align: middle;
+}
+
+/* Em telas pequenas os botões de ação ficam empilhados */
+@media (max-width: 576px) {
+  td button {
+    display: block;
+    width: 100%;
+    margin: 0 0 4px 0 !important;
+  }
+}
